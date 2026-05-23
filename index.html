@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>医療DX シリーズ — 臨床検査部門システムのクラウド化 完全ガイド</title>
+<meta name="description" content="臨床検査部門システム（LIS）のクラウド化を、政策・法規制(AWS基盤)・事業体制・アプリ実装の4段で解説する医療DXシリーズの目次。各ガイドへの入口。">
+<style>
+:root{
+  --primary:#0e4d92; --primary-light:#2563eb; --accent:#06b6d4;
+  --policy:#2563eb; --policy-bg:#eff6ff; --policy-bd:#bfdbfe;
+  --infra:#d97706; --infra-bg:#fffbeb; --infra-bd:#fde68a;
+  --biz:#059669; --biz-bg:#ecfdf5; --biz-bd:#a7f3d0;
+  --app:#7c3aed; --app-bg:#f5f3ff; --app-bd:#ddd6fe;
+  --bg:#f8fafc; --bg-card:#fff; --text:#1f2937; --text-soft:#6b7280; --border:#e5e7eb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Hiragino Sans","Yu Gothic","Meiryo",-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:15px}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+a{color:var(--primary-light)}
+
+header{background:linear-gradient(135deg,#0e4d92 0%,#1e3a8a 50%,#06b6d4 100%);color:#fff;padding:54px 0 44px;text-align:center}
+header .tag{display:inline-block;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:4px 14px;border-radius:20px;margin-bottom:16px}
+header h1{font-size:27px;font-weight:700;margin-bottom:14px;line-height:1.4}
+header p{font-size:15px;opacity:.92;max-width:760px;margin:0 auto}
+
+.intro{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 26px;margin:28px 0 20px}
+.intro h2{font-size:17px;color:var(--primary);margin-bottom:10px}
+.intro p{margin-bottom:8px}
+.intro .read{font-size:13.5px;color:var(--text-soft);margin-top:10px}
+.intro .read b{color:var(--primary)}
+
+/* 4段の流れ */
+.flow{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin:8px 0 30px}
+.flow .step{flex:1;min-width:150px;border-radius:10px;padding:13px 14px;text-align:center}
+.flow .step .layer{font-size:11px;font-weight:700;margin-bottom:5px}
+.flow .step .q{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.flow .step .d{font-size:11.5px;color:var(--text-soft)}
+.flow .step.policy{background:var(--policy-bg);border:1px solid var(--policy-bd)} .flow .step.policy .layer{color:var(--policy)}
+.flow .step.infra{background:var(--infra-bg);border:1px solid var(--infra-bd)} .flow .step.infra .layer{color:var(--infra)}
+.flow .step.biz{background:var(--biz-bg);border:1px solid var(--biz-bd)} .flow .step.biz .layer{color:var(--biz)}
+.flow .step.app{background:var(--app-bg);border:1px solid var(--app-bd)} .flow .step.app .layer{color:var(--app)}
+.flow .arw{display:flex;align-items:center;color:var(--primary-light);font-size:18px;font-weight:700}
+
+/* ガイドカード */
+.guides{display:flex;flex-direction:column;gap:14px}
+.guide{display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;text-decoration:none;color:inherit;transition:box-shadow .2s,transform .2s,border-color .2s;position:relative;overflow:hidden}
+.guide:hover{box-shadow:0 10px 28px rgba(14,77,146,.12);transform:translateY(-2px);border-color:var(--primary-light)}
+.guide .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+.guide.policy .bar{background:var(--policy)} .guide.infra .bar{background:var(--infra)} .guide.biz .bar{background:var(--biz)} .guide.app .bar{background:var(--app)}
+.guide .top{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.guide .num{width:34px;height:34px;border-radius:50%;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.guide.policy .num{background:var(--policy)} .guide.infra .num{background:var(--infra)} .guide.biz .num{background:var(--biz)} .guide.app .num{background:var(--app)}
+.guide h3{font-size:18px;color:var(--primary);font-weight:700}
+.guide .lbadge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px}
+.guide.policy .lbadge{background:var(--policy-bg);color:var(--policy);border:1px solid var(--policy-bd)}
+.guide.infra .lbadge{background:var(--infra-bg);color:var(--infra);border:1px solid var(--infra-bd)}
+.guide.biz .lbadge{background:var(--biz-bg);color:var(--biz);border:1px solid var(--biz-bd)}
+.guide.app .lbadge{background:var(--app-bg);color:var(--app);border:1px solid var(--app-bd)}
+.guide .desc{font-size:14px;margin-bottom:12px}
+.guide .meta{display:grid;grid-template-columns:1fr 2fr;gap:8px 16px;font-size:13px}
+.guide .meta .k{color:var(--text-soft);font-weight:600}
+.guide .meta .v{color:var(--text)}
+.guide .open{margin-top:14px;font-size:13px;font-weight:700;color:var(--primary-light)}
+.guide .open::after{content:" →"}
+
+footer{margin:40px 0 60px;text-align:center;color:var(--text-soft);font-size:12.5px;line-height:1.7}
+footer .disc{max-width:760px;margin:0 auto 12px;font-size:11.5px;text-align:left;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+
+@media(max-width:720px){
+  header h1{font-size:21px}
+  .flow{flex-direction:column}
+  .flow .arw{transform:rotate(90deg);justify-content:center;font-size:15px}
+  .guide .meta{grid-template-columns:1fr}
+  .guide .meta .k{margin-top:4px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="tag">医療DX シリーズ</div>
+    <h1>臨床検査部門システムのクラウド化<br>完全ガイド</h1>
+    <p>検査・細菌・病理の部門システム（LIS）をクラウドで実現する道筋を、政策の全体像から、法規制を満たす基盤、受注に必要な事業体制、そして安全なアプリ実装まで、4 つのガイドで通して解説する。</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <h2>4 段で読む</h2>
+    <p>クラウド化は「なぜ進めるか（政策）」「どの基盤で守るか（インフラ）」「誰が受注できるか（事業体制）」「どう安全に作るか（アプリ）」の 4 層が積み重なる。各層を 1 ガイドで扱う。</p>
+    <p class="read"><b>読む順番：</b> 初めてなら ①→②→③→④。開発担当は ④ から、経営・営業は ①→③ を先に。各ガイドは独立して読めるが、相互リンクでつながっている。</p>
+  </div>
+
+  <div class="flow">
+    <div class="step policy"><div class="layer">① 政策</div><div class="q">なぜ進めるか</div><div class="d">医療DX工程表・国の方針</div></div>
+    <div class="arw">→</div>
+    <div class="step infra"><div class="layer">② インフラ</div><div class="q">どの基盤で守るか</div><div class="d">法規制 × AWS 構成</div></div>
+    <div class="arw">→</div>
+    <div class="step biz"><div class="layer">③ 事業体制</div><div class="q">誰が受注できるか</div><div class="d">認証・人材・許可・入札</div></div>
+    <div class="arw">→</div>
+    <div class="step app"><div class="layer">④ アプリ</div><div class="q">どう安全に作るか</div><div class="d">ASVS L2 × 実装</div></div>
+  </div>
+
+  <div class="guides">
+
+    <a class="guide policy" href="https://kioh-daiv.github.io/medical-dx-roadmap-overview/">
+      <div class="bar"></div>
+      <div class="top"><div class="num">1</div><h3>医療DX 工程表 全体像</h3><span class="lbadge">政策レイヤー</span></div>
+      <div class="desc">2023→2030 の医療DX 推進工程表を、5 つの目的・4 つの主要施策・2030 年のゴールで俯瞰する。一般教養として全体像をつかむ。</div>
+      <div class="meta">
+        <span class="k">対象</span><span class="v">経営層・全関係者（前提知識として）</span>
+        <span class="k">主な内容</span><span class="v">医療DX令和ビジョン2030、マイナ保険証・電子処方箋・電子カルテ情報共有サービス、実施主体、2030年ゴール</span>
+      </div>
+      <div class="open">開く</div>
+    </a>
+
+    <a class="guide infra" href="https://kioh-daiv.github.io/lis-cloud-compliance-guide/">
+      <div class="bar"></div>
+      <div class="top"><div class="num">2</div><h3>法規制対応と技術要件</h3><span class="lbadge">インフラレイヤー</span></div>
+      <div class="desc">クラウド化で満たすべき法規制を、根拠条項 → 要件 → AWS 技術スタック → 残リスクまで分解。網羅性を導出フレームワークで示し「他は?」に答える。</div>
+      <div class="meta">
+        <span class="k">対象</span><span class="v">設計者・経営層・調達担当</span>
+        <span class="k">主な内容</span><span class="v">個情法・3省2GL・検体検査精度確保・感染症法・薬機法、AWS アーキテクチャ構成図、要件×技術スタック、トレーサビリティ表</span>
+      </div>
+      <div class="open">開く</div>
+    </a>
+
+    <a class="guide biz" href="https://kioh-daiv.github.io/lis-procurement-qualifications/">
+      <div class="bar"></div>
+      <div class="top"><div class="num">3</div><h3>案件受注のための資格要件</h3><span class="lbadge">事業体制レイヤー</span></div>
+      <div class="desc">受注する事業者に何が要るかを、組織の認証・人材の資格・事業形態の許可・入札資格・AWS パートナー認定の 5 レイヤーで、必須度別に整理する。</div>
+      <div class="meta">
+        <span class="k">対象</span><span class="v">経営・営業・人材育成担当</span>
+        <span class="k">主な内容</span><span class="v">ISMS/Pマーク/ISMAP、医療情報技師・AWS認定・CISSP、医療機器業許可・衛生検査所登録、全省庁統一資格、AWSパートナー、投資ロードマップ</span>
+      </div>
+      <div class="open">開く</div>
+    </a>
+
+    <a class="guide app" href="https://kioh-daiv.github.io/lis-web-secure-implementation/">
+      <div class="bar"></div>
+      <div class="top"><div class="num">4</div><h3>Web 基盤 セキュア実装</h3><span class="lbadge">アプリレイヤー</span></div>
+      <div class="desc">機能の「上」に必要な Web 基盤実装を、OWASP ASVS 5.0 の L2 を安心ラインに整理。「何を・どこまで」を Spring/Angular の実装例で示す。</div>
+      <div class="meta">
+        <span class="k">対象</span><span class="v">開発者・アーキテクト</span>
+        <span class="k">主な内容</span><span class="v">認証・セッション・認可、入力検証・XSS/CSRF、暗号・データ保護、監査ログ・API、検査業務特有、可用性。各項目に Spring/Angular 実装例とレベル(L1-L3)</span>
+      </div>
+      <div class="open">開く</div>
+    </a>
+
+  </div>
+
+  <footer>
+    <div class="disc">本シリーズは 2026 年 5 月時点の公的・公式情報に基づく一般整理であり、特定の組織・案件における適合性や十分性を保証するものではない。法規制・ガイドライン・規格は改定される。実際の適用にあたっては各原典・所管官庁・専門家の確認を前提とすること。各ガイドの条項番号・実装例は採用環境で最終確認すること。</div>
+    <div>作成：X Harumi ／ 最終更新：2026年5月</div>
+  </footer>
+
+</div>
+
+</body>
+</html>
